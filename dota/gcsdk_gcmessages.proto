@@ -14,7 +14,6 @@ enum ESourceEngine {
 enum PartnerAccountType {
 	PARTNER_NONE = 0;
 	PARTNER_PERFECT_WORLD = 1;
-	PARTNER_NEXON = 2;
 	PARTNER_INVALID = 3;
 }
 
@@ -109,6 +108,10 @@ message CMsgGCMultiplexMessage {
 	optional uint32 msgtype = 1;
 	optional bytes payload = 2;
 	repeated fixed64 steamids = 3;
+}
+
+message CMsgGCToGCSubGCStarting {
+	optional uint32 dir_index = 1;
 }
 
 message CGCToGCMsgMasterAck {
@@ -209,6 +212,7 @@ message CMsgClientWelcome {
 	optional fixed32 item_schema_crc = 7;
 	optional string items_game_url = 8;
 	optional uint32 gc_socache_file_version = 9;
+	optional string txn_country_code = 10;
 }
 
 message CMsgConnectionStatus {
@@ -347,5 +351,44 @@ message CMsgGCToClientPollConvarRequest {
 message CMsgGCToClientPollConvarResponse {
 	optional uint32 poll_id = 1;
 	optional string convar_value = 2;
+}
+
+message CGCMsgCompressedMsgToClient {
+	optional uint32 msg_id = 1;
+	optional bytes compressed_msg = 2;
+}
+
+message CMsgGCToGCMasterBroadcastMessage {
+	optional uint32 users_per_second = 1;
+	optional bool send_to_users = 2;
+	optional bool send_to_servers = 3;
+	optional uint32 msg_id = 4;
+	optional bytes msg_data = 5;
+}
+
+message CMsgGCToGCMasterSubscribeToCache {
+	optional uint32 soid_type = 1;
+	optional fixed64 soid_id = 2;
+	repeated uint32 account_ids = 3;
+	repeated fixed64 steam_ids = 4;
+}
+
+message CMsgGCToGCMasterSubscribeToCacheResponse {
+}
+
+message CMsgGCToGCMasterSubscribeToCacheAsync {
+	optional CMsgGCToGCMasterSubscribeToCache subscribe_msg = 1;
+}
+
+message CMsgGCToGCMasterUnsubscribeFromCache {
+	optional uint32 soid_type = 1;
+	optional fixed64 soid_id = 2;
+	repeated uint32 account_ids = 3;
+	repeated fixed64 steam_ids = 4;
+}
+
+message CMsgGCToGCMasterDestroyCache {
+	optional uint32 soid_type = 1;
+	optional fixed64 soid_id = 2;
 }
 

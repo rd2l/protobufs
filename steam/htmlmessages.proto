@@ -21,6 +21,7 @@ message CMsgKeyDown {
 	optional uint32 browser_handle = 1;
 	optional uint32 keyCode = 2;
 	optional uint32 modifiers = 3;
+	optional bool is_system_key = 4;
 }
 
 message CMsgKeyChar {
@@ -39,6 +40,9 @@ message CMsgMouseUp {
 	optional uint32 browser_handle = 1;
 	optional uint32 mouse_button = 2;
 	optional uint32 modifiers = 3;
+	optional bool is_off_panel = 4;
+	optional int32 x = 5;
+	optional int32 y = 6;
 }
 
 message CMsgMouseDblClick {
@@ -49,8 +53,9 @@ message CMsgMouseDblClick {
 
 message CMsgMouseWheel {
 	optional uint32 browser_handle = 1;
-	optional int32 delta = 2;
-	optional uint32 modifiers = 3;
+	optional int32 deltax = 2;
+	optional int32 deltay = 3;
+	optional uint32 modifiers = 4;
 }
 
 message CMsgMouseMove {
@@ -77,8 +82,11 @@ message CMsgBrowserCreate {
 	optional bool borderless = 12 [default = false];
 	optional string vroverlay_key = 13;
 	optional uint32 browser_type = 14 [default = 0];
-	optional int32 initial_top = 15 [default = -1];
-	optional int32 initial_left = 16 [default = -1];
+	optional int32 initial_top = 15 [default = -2147483648];
+	optional int32 initial_left = 16 [default = -2147483648];
+	optional bool only_allow_trusted_popups = 17 [default = false];
+	optional string initial_url = 18;
+	optional fixed64 hwnd_parent = 19;
 }
 
 message CMsgBrowserCreateResponse {
@@ -120,6 +128,28 @@ message CMsgBrowserSize {
 	optional uint32 height = 3;
 }
 
+message CMsgBrowserSetMinSize {
+	optional uint32 browser_handle = 1;
+	optional uint32 width = 2;
+	optional uint32 height = 3;
+}
+
+message CMsgBrowserPosition {
+	optional uint32 browser_handle = 1;
+	optional int32 x = 2;
+	optional int32 y = 3;
+	optional int32 x_local = 4;
+	optional int32 y_local = 5;
+}
+
+message CMsgBrowserResized {
+	optional uint32 browser_handle = 1;
+	optional int32 x = 2;
+	optional int32 y = 3;
+	optional uint32 width = 4;
+	optional uint32 height = 5;
+}
+
 message CMsgPostURL {
 	optional uint32 browser_handle = 1;
 	optional string url = 2;
@@ -149,7 +179,16 @@ message CMsgGoBack {
 	optional uint32 browser_handle = 1;
 }
 
+message CMsgWasHidden {
+	optional uint32 browser_handle = 1;
+	optional bool hidden = 2;
+}
+
 message CMsgClearHistory {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgClearAllBrowsingData {
 	optional uint32 browser_handle = 1;
 }
 
@@ -220,7 +259,7 @@ message CMsgSetVerticalScroll {
 
 message CMsgSetZoomLevel {
 	optional uint32 browser_handle = 1;
-	optional uint32 zoom = 2;
+	optional double zoom = 2;
 }
 
 message CMsgViewSource {
@@ -230,6 +269,7 @@ message CMsgViewSource {
 message CMsgBrowserReady {
 	optional uint32 browser_handle = 1;
 	optional string vr_overlay_key = 2;
+	optional fixed64 hwnd_browser = 3;
 }
 
 message CMsgURLChanged {
@@ -298,8 +338,8 @@ message CMsgHidePopup {
 
 message CMsgSizePopup {
 	optional uint32 browser_handle = 1;
-	optional uint32 x = 2;
-	optional uint32 y = 3;
+	optional int32 x = 2;
+	optional int32 y = 3;
 	optional uint32 wide = 4;
 	optional uint32 tall = 5;
 }
@@ -313,11 +353,12 @@ message CMsgOpenNewTab {
 message CMsgPopupHTMLWindow {
 	optional uint32 browser_handle = 1;
 	optional string url = 2;
-	optional uint32 x = 3;
-	optional uint32 y = 4;
+	optional int32 x = 3 [default = -2147483648];
+	optional int32 y = 4 [default = -2147483648];
 	optional uint32 wide = 5;
 	optional uint32 tall = 6;
 	optional uint32 popup_index = 7;
+	optional bool trusted_creator = 8;
 }
 
 message CMsgPopupHTMLWindowResponse {
@@ -392,6 +433,10 @@ message CMsgSetSharedPaintBuffers {
 	optional uint64 source_pid = 4;
 	optional uint64 source_handle = 5;
 	optional uint64 handle = 6;
+}
+
+message CMsgAckSharedPaintBuffers {
+	optional uint32 browser_handle = 1;
 }
 
 message CMsgNeedsPaint {
@@ -518,6 +563,7 @@ message CMsgCanGoBackAndForward {
 message CMsgOpenSteamURL {
 	optional uint32 browser_handle = 1;
 	optional string url = 2;
+	optional string referrer = 3;
 }
 
 message CMsgSetCookie {
@@ -547,12 +593,23 @@ message CMsgRequestFullScreen {
 	optional uint32 browser_handle = 1;
 }
 
-message CMsgRequestFullScreenResponse {
+message CMsgExitFullScreen {
 	optional uint32 browser_handle = 1;
-	optional bool ballow = 2;
 }
 
-message CMsgExitFullScreen {
+message CMsgToggleFindInPageDialog {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgSetPIDShuttingDown {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgDisableBackgroundThrottling {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgAckPIDShuttingDown {
 	optional uint32 browser_handle = 1;
 }
 
@@ -626,6 +683,14 @@ message CMsgScreenInformationChanged {
 	optional uint32 browser_handle = 1;
 	optional uint32 override_width = 2;
 	optional uint32 override_height = 3;
+	optional uint32 monitor_left = 4;
+	optional uint32 monitor_top = 5;
+	optional uint32 monitor_right = 6;
+	optional uint32 monitor_bottom = 7;
+	optional uint32 usable_left = 8;
+	optional uint32 usable_top = 9;
+	optional uint32 usable_right = 10;
+	optional uint32 usable_bottom = 11;
 }
 
 message CMsgClearAllCookies {
@@ -669,7 +734,7 @@ message CMsgJSValue {
 	optional bool bool_value = 1;
 	optional int32 int_value = 2;
 	optional uint32 uint_value = 3;
-	optional float float_value = 4;
+	optional double double_value = 4;
 	optional string string_value = 5;
 	optional uint64 function_handle = 6;
 	optional bool is_array = 8;
@@ -706,10 +771,6 @@ message CMsgLoadLocalization {
 	optional string language = 3;
 }
 
-message CMsgEnableSteamClientAPI {
-	optional uint32 browser_handle = 1;
-}
-
 message CMsgJumpListLink {
 	optional string display_name = 1;
 	optional string url_link = 2;
@@ -739,5 +800,86 @@ message CMsgGameOverlayTargetTextureID {
 	optional uint32 browser_handle = 1;
 	optional uint32 target_pid = 2;
 	optional uint32 texture_handle = 3;
+}
+
+message CMsgDraggableRegionsChanged {
+	message DraggableRects {
+		optional int32 x = 1;
+		optional int32 y = 2;
+		optional int32 width = 3;
+		optional int32 height = 4;
+		optional bool draggable = 5;
+	}
+
+	optional uint32 browser_handle = 1;
+	repeated CMsgDraggableRegionsChanged.DraggableRects rects = 2;
+}
+
+message CMsgResizeGripChanged {
+	optional uint32 browser_handle = 1;
+	optional int32 width = 2;
+	optional int32 height = 3;
+}
+
+message CMsgSetWindowPosition {
+	optional uint32 browser_handle = 1;
+	optional int32 x = 2;
+	optional int32 y = 3;
+	optional int32 width = 4;
+	optional int32 height = 5;
+}
+
+message CMsgShowWindow {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgHideWindow {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgBringWindowToFront {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgSetForegroundWindow {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgMaximizeRestoreWindow {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgMinimizeWindow {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgShowBrowserContextMenu {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgImeSetComposition {
+	optional uint32 browser_handle = 1;
+	optional string text = 2;
+}
+
+message CMsgImeCommitText {
+	optional uint32 browser_handle = 1;
+	optional string text = 2;
+}
+
+message CMsgImeCancelComposition {
+	optional uint32 browser_handle = 1;
+}
+
+message CMsgImeCompositionRangeChanged {
+	optional uint32 browser_handle = 1;
+	optional uint32 x = 2;
+	optional uint32 y = 3;
+}
+
+message CMsgInspectElement {
+	optional uint32 browser_handle = 1;
+	optional uint32 x = 2;
+	optional uint32 y = 3;
 }
 
